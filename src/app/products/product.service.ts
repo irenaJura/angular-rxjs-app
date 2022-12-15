@@ -16,7 +16,7 @@ export class ProductService {
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      // tap(data => console.log('Products: ', JSON.stringify(data))),
+      tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
@@ -48,6 +48,15 @@ export class ProductService {
      tap(p => console.log('selected', p))
   )
 
+  selectedProductSuppliers$ = combineLatest([
+    this.selectedProduct$,
+    this.supplierService.suppliers$
+  ]).pipe(
+    map(([selectedProduct, suppliers]) =>
+    suppliers.filter(s => selectedProduct?.supplierIds?.includes(s.id))
+    )
+  )
+
   private productInsertedSubject = new Subject<Product>();
   productInsertedAction$ = this.productInsertedSubject.asObservable();
 
@@ -62,8 +71,7 @@ export class ProductService {
   constructor(
     private http: HttpClient,
     private productCategoryService: ProductCategoryService,
-    private supplierService: SupplierService
-    ) { }
+    private supplierService: SupplierService) { }
 
   selectedProductChanged(selectedProductId: number): void {
     this.productSelectedSubject.next(selectedProductId);
